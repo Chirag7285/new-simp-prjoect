@@ -1,11 +1,11 @@
 const express = require("express");
-const app = express();
+const path = require("path");
 
+const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.get("/", (req, res) => {
-  res.send("Welcome to Simple Calculator API 🧮");
-});
+// Serve the UI from /public (index.html will load at "/")
+app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/calculate", (req, res) => {
   const { num1, num2, operation } = req.query;
@@ -38,6 +38,9 @@ app.get("/calculate", (req, res) => {
 
   return res.json({ num1: a, num2: b, operation, result });
 });
+
+// IMPORTANT: remove the old app.get("/") welcome route if you had it.
+// With express.static, "/" will serve public/index.html automatically.
 
 app.listen(PORT, () => {
   console.log(`Calculator app running on http://localhost:${PORT}`);
