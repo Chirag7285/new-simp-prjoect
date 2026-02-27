@@ -3,47 +3,65 @@ pipeline {
 
   environment {
     APP_HOST = "65.2.39.0"
-    APP_USER = "ec2-user"
     APP_DIR  = "/home/ec2-user/new-simp-prjoect"
-    REPO_URL = "https://github.com/Chirag7285/new-simp-prjoect.git"
   }
 
   stages {
     stage('Checkout') {
-      steps { checkout scm }
+      steps {
+        checkout scm
+      }
     }
 
     stage('Install dependencies') {
-      steps { sh 'npm ci' }
+      steps {
+        sh 'npm ci'
+      }
     }
 
     stage('Build') {
-      steps { sh 'npm run build' }
+      steps {
+        sh 'npm run build'
+      }
     }
 
     stage('Print success') {
-      steps { echo 'Build Successful' }
+      steps {
+        echo 'Build Successful'
+      }
     }
 
     stage('Deploy to EC2') {
       steps {
-        sshagent(credentials: ['app-ssh']) {
+        withCredentials([
+          sshUserPrivateKey(
+            credentialsId: 'app-ssh',
+            keyFileVariable: 'KEYFILE',
+            usernameVariable: 'SSHUSER'
+          )
+        ]) {
           sh """
-            ssh -o StrictHostKeyChecking=no ${APP_USER}@${APP_HOST} '
+            echo "Deploying to ${APP_HOST}..."
+            ssh -i "\$KEYFILE" -o StrictHostKeyChecking=no "\$SSHUSER@${APP_HOST}" '
               set -e
-              if [ ! -d "${APP_DIR}" ]; then
-                git clone ${REPO_URL} ${APP_DIR}
-              fi
 
+              echo "On EC2: \$(hostname)"
               cd ${APP_DIR}
-              git fetch --all
-              git reset --hard origin/main
 
+              echo "Pulling latest code..."
+              git pull
+
+              echo "Installing dependencies..."
               npm ci
+
+              echo "Building..."
               npm run build
 
-              pm2 start server.js --name calculator-app --update-env || pm2 restart calculator-app --update-env
+              echo "Restarting app with PM2..."
+              pm2 restart calculator-app || pm2 start server.js --name calculator-app
               pm2 save
+
+              echo "Deploy Successful"
             '
           """
         }
