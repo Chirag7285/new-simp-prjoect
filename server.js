@@ -39,7 +39,7 @@ app.get("/calculate", (req, res) => {
   return res.json({ num1: a, num2: b, operation, result });
 });
 
-// IMPORTANT: remove the old app.get("/") welcome route if you had it.
+// OKAY IMPORTANT: remove the old app.get("/") welcome route if you had it.
 // With express.static, "/" will serve public/index.html automatically.
 
 app.listen(PORT, () => {
