@@ -35,7 +35,7 @@ pipeline {
       steps {
         withCredentials([
           sshUserPrivateKey(
-            credentialsId: 'app-ssh',
+            credentialsId: 'github-token',
             keyFileVariable: 'KEYFILE',
             usernameVariable: 'SSHUSER'
           )
